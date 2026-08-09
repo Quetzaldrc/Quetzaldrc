@@ -32,6 +32,15 @@ export default function QuetzalShop() {
   const [sizeChoice, setSizeChoice] = useState({});
   const [oosNotice, setOosNotice] = useState(null); // { productId, size }
   const [cart, setCart] = useState([]);
+  const [drawerStep, setDrawerStep] = useState("cart"); // "cart" | "checkout"
+  const [checkoutForm, setCheckoutForm] = useState({
+    prenom: "",
+    nom: "",
+    email: "",
+    whatsapp: "",
+    adresse: "",
+  });
+  const [paymentMethod, setPaymentMethod] = useState(null); // "airtel" | "cash"
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -70,9 +79,7 @@ export default function QuetzalShop() {
         if (!cancelled) setProducts(data.products || []);
       } catch (err) {
         if (!cancelled) {
-          setLoadError(
-            "Erreur technique (debug) : " + (err && err.message ? err.message : String(err))
-          );
+          setLoadError("Impossible de charger la collection pour le moment.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -159,8 +166,29 @@ export default function QuetzalShop() {
     );
   }
 
+  function closeDrawer() {
+    setDrawerOpen(false);
+    setDrawerStep("cart");
+    setCheckoutError(null);
+  }
+
   async function checkout() {
     if (cart.length === 0 || checkingOut) return;
+
+    if (
+      !checkoutForm.prenom.trim() ||
+      !checkoutForm.nom.trim() ||
+      !checkoutForm.whatsapp.trim() ||
+      !checkoutForm.adresse.trim()
+    ) {
+      setCheckoutError("Merci de remplir tous les champs obligatoires.");
+      return;
+    }
+    if (!paymentMethod) {
+      setCheckoutError("Merci de choisir un mode de paiement.");
+      return;
+    }
+
     setCheckingOut(true);
     setCheckoutError(null);
 
@@ -169,7 +197,17 @@ export default function QuetzalShop() {
       const res = await fetch(STOCK_API_URL, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({
+          items,
+          customer: {
+            nom: checkoutForm.nom.trim(),
+            prenom: checkoutForm.prenom.trim(),
+            email: checkoutForm.email.trim(),
+            whatsapp: checkoutForm.whatsapp.trim(),
+            adresse: checkoutForm.adresse.trim(),
+            paiement: paymentMethod === "airtel" ? "Airtel Money" : "Cash à la livraison",
+          },
+        }),
       });
       const data = await res.json();
 
@@ -191,9 +229,11 @@ export default function QuetzalShop() {
         return;
       }
 
-      const orderNo = "QTZ-" + Math.floor(10000 + Math.random() * 89999);
-      setConfirmed({ orderNo, total: subtotal });
+      setConfirmed({ orderNo: data.orderNo, total: data.orderTotal });
       setCart([]);
+      setCheckoutForm({ prenom: "", nom: "", email: "", whatsapp: "", adresse: "" });
+      setPaymentMethod(null);
+      setDrawerStep("cart");
     } catch (err) {
       setCheckoutError("Impossible de contacter le serveur de stock. Réessaie.");
     } finally {
@@ -415,15 +455,17 @@ export default function QuetzalShop() {
           <div
             className="absolute inset-0"
             style={{ background: "rgba(38,32,26,0.45)" }}
-            onClick={() => setDrawerOpen(false)}
+            onClick={closeDrawer}
           />
           <div
             className="relative w-full max-w-md h-full flex flex-col p-6"
             style={{ background: C.panel, borderLeft: `1px solid ${C.line}` }}
           >
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display text-xl" style={{ fontWeight: 700 }}>Panier</h3>
-              <button onClick={() => setDrawerOpen(false)}>
+              <h3 className="font-display text-xl" style={{ fontWeight: 700 }}>
+                {drawerStep === "checkout" ? "Livraison & paiement" : "Panier"}
+              </h3>
+              <button onClick={closeDrawer}>
                 <X size={20} />
               </button>
             </div>
@@ -455,7 +497,7 @@ export default function QuetzalShop() {
               <div className="flex-1 flex items-center justify-center">
                 <p className="font-mono text-xs" style={{ color: C.inkDim }}>Votre panier est vide.</p>
               </div>
-            ) : (
+            ) : drawerStep === "cart" ? (
               <>
                 <div className="flex-1 overflow-y-auto flex flex-col gap-4">
                   {cart.map((item) => {
@@ -492,6 +534,120 @@ export default function QuetzalShop() {
                     <span style={{ color: C.inkDim }}>Sous-total</span>
                     <span style={{ color: C.green }}>${subtotal}</span>
                   </div>
+                  <button
+                    onClick={() => setDrawerStep("checkout")}
+                    className="w-full py-3 font-mono text-xs uppercase"
+                    style={{ background: C.ink, color: C.bg, letterSpacing: "0.08em", borderRadius: "2px" }}
+                  >
+                    Passer commande
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex-1 overflow-y-auto flex flex-col gap-4">
+                  <button
+                    onClick={() => setDrawerStep("cart")}
+                    className="font-mono text-[11px] uppercase self-start"
+                    style={{ color: C.inkDim, letterSpacing: "0.06em" }}
+                  >
+                    ← Retour au panier
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      placeholder="Prénom *"
+                      value={checkoutForm.prenom}
+                      onChange={(e) => setCheckoutForm((prev) => ({ ...prev, prenom: e.target.value }))}
+                      className="w-full px-3 py-2 font-mono text-xs"
+                      style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="Nom *"
+                      value={checkoutForm.nom}
+                      onChange={(e) => setCheckoutForm((prev) => ({ ...prev, nom: e.target.value }))}
+                      className="w-full px-3 py-2 font-mono text-xs"
+                      style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+                    />
+                  </div>
+
+                  <input
+                    type="email"
+                    placeholder="Email (facultatif)"
+                    value={checkoutForm.email}
+                    onChange={(e) => setCheckoutForm((prev) => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 font-mono text-xs"
+                    style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+                  />
+
+                  <input
+                    type="tel"
+                    placeholder="Numéro WhatsApp *"
+                    value={checkoutForm.whatsapp}
+                    onChange={(e) => setCheckoutForm((prev) => ({ ...prev, whatsapp: e.target.value }))}
+                    className="w-full px-3 py-2 font-mono text-xs"
+                    style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+                  />
+
+                  <textarea
+                    placeholder="Adresse de livraison *"
+                    value={checkoutForm.adresse}
+                    onChange={(e) => setCheckoutForm((prev) => ({ ...prev, adresse: e.target.value }))}
+                    rows={2}
+                    className="w-full px-3 py-2 font-mono text-xs resize-none"
+                    style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+                  />
+
+                  <div>
+                    <p className="font-mono text-[11px] uppercase mb-2" style={{ color: C.inkDim, letterSpacing: "0.06em" }}>
+                      Mode de paiement *
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {[
+                        { id: "airtel", label: "Airtel Money" },
+                        { id: "cash", label: "Cash à la livraison" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.id}
+                          onClick={() => setPaymentMethod(opt.id)}
+                          className="w-full flex items-center gap-3 px-3 py-2.5 font-mono text-xs text-left"
+                          style={{
+                            border: `1px solid ${paymentMethod === opt.id ? C.ink : C.line}`,
+                            borderRadius: "2px",
+                            background: paymentMethod === opt.id ? C.panelSoft : "transparent",
+                            color: C.ink,
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 14,
+                              height: 14,
+                              borderRadius: "50%",
+                              border: `1px solid ${C.ink}`,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {paymentMethod === opt.id && (
+                              <span style={{ width: 7, height: 7, borderRadius: "50%", background: C.ink }} />
+                            )}
+                          </span>
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <div className="flex justify-between mb-4 font-mono text-sm">
+                    <span style={{ color: C.inkDim }}>Sous-total</span>
+                    <span style={{ color: C.green }}>${subtotal}</span>
+                  </div>
                   {checkoutError && (
                     <p className="font-mono text-[11px] mb-3" style={{ color: C.green }}>
                       {checkoutError}
@@ -516,7 +672,7 @@ export default function QuetzalShop() {
                         Vérification du stock…
                       </>
                     ) : (
-                      "Passer commande"
+                      "Confirmer la commande"
                     )}
                   </button>
                 </div>
