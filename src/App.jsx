@@ -51,14 +51,21 @@ export default function QuetzalShop() {
     async function load() {
       setLoading(true);
       setLoadError(null);
+      let directMsg = null;
+      let proxyMsg = null;
       try {
         let data;
         try {
           data = await tryFetch(STOCK_API_URL);
         } catch (directErr) {
-          // Repli via un proxy CORS si l'appel direct est bloqué par le navigateur
-          const proxied = "https://api.allorigins.win/raw?url=" + encodeURIComponent(STOCK_API_URL);
-          data = await tryFetch(proxied);
+          directMsg = directErr && directErr.message ? directErr.message : String(directErr);
+          try {
+            const proxied = "https://api.allorigins.win/raw?url=" + encodeURIComponent(STOCK_API_URL);
+            data = await tryFetch(proxied);
+          } catch (proxyErr) {
+            proxyMsg = proxyErr && proxyErr.message ? proxyErr.message : String(proxyErr);
+            throw new Error("direct: " + directMsg + " | proxy: " + proxyMsg);
+          }
         }
         if (!cancelled) setProducts(data.products || []);
       } catch (err) {
