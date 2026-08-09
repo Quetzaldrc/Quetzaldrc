@@ -8,5 +8,5 @@ import react from "@vitejs/plugin-react";
 // laisse "/" tel quel.
 export default defineConfig({
   plugins: [react()],
-  base: "/",
+  base: "/Quetzaldrc/",
 });
