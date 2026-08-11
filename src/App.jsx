@@ -25,6 +25,53 @@ const C = {
 
 const SIZES = [39, 40, 41, 42, 43, 44, 45];
 
+const COUNTRIES = [
+  { name: "RD Congo", code: "+243", flag: "🇨🇩" },
+  { name: "Congo-Brazzaville", code: "+242", flag: "🇨🇬" },
+  { name: "Angola", code: "+244", flag: "🇦🇴" },
+  { name: "Rwanda", code: "+250", flag: "🇷🇼" },
+  { name: "Burundi", code: "+257", flag: "🇧🇮" },
+  { name: "Ouganda", code: "+256", flag: "🇺🇬" },
+  { name: "Zambie", code: "+260", flag: "🇿🇲" },
+  { name: "Tanzanie", code: "+255", flag: "🇹🇿" },
+  { name: "Kenya", code: "+254", flag: "🇰🇪" },
+  { name: "Cameroun", code: "+237", flag: "🇨🇲" },
+  { name: "Gabon", code: "+241", flag: "🇬🇦" },
+  { name: "Côte d'Ivoire", code: "+225", flag: "🇨🇮" },
+  { name: "Sénégal", code: "+221", flag: "🇸🇳" },
+  { name: "Mali", code: "+223", flag: "🇲🇱" },
+  { name: "Bénin", code: "+229", flag: "🇧🇯" },
+  { name: "Togo", code: "+228", flag: "🇹🇬" },
+  { name: "Burkina Faso", code: "+226", flag: "🇧🇫" },
+  { name: "Niger", code: "+227", flag: "🇳🇪" },
+  { name: "Tchad", code: "+235", flag: "🇹🇩" },
+  { name: "Ghana", code: "+233", flag: "🇬🇭" },
+  { name: "Nigeria", code: "+234", flag: "🇳🇬" },
+  { name: "Afrique du Sud", code: "+27", flag: "🇿🇦" },
+  { name: "Égypte", code: "+20", flag: "🇪🇬" },
+  { name: "Maroc", code: "+212", flag: "🇲🇦" },
+  { name: "Algérie", code: "+213", flag: "🇩🇿" },
+  { name: "Tunisie", code: "+216", flag: "🇹🇳" },
+  { name: "France", code: "+33", flag: "🇫🇷" },
+  { name: "Belgique", code: "+32", flag: "🇧🇪" },
+  { name: "Suisse", code: "+41", flag: "🇨🇭" },
+  { name: "Canada", code: "+1", flag: "🇨🇦" },
+  { name: "États-Unis", code: "+1", flag: "🇺🇸" },
+  { name: "Royaume-Uni", code: "+44", flag: "🇬🇧" },
+  { name: "Allemagne", code: "+49", flag: "🇩🇪" },
+  { name: "Portugal", code: "+351", flag: "🇵🇹" },
+  { name: "Chine", code: "+86", flag: "🇨🇳" },
+  { name: "Inde", code: "+91", flag: "🇮🇳" },
+  { name: "Émirats Arabes Unis", code: "+971", flag: "🇦🇪" },
+];
+
+function sanitizePhoneInput(value) {
+  // Garde un éventuel '+' en tête, puis uniquement des chiffres.
+  const hasPlus = value.trim().startsWith("+");
+  const digits = value.replace(/[^\d]/g, "");
+  return (hasPlus ? "+" : "") + digits;
+}
+
 export default function QuetzalShop() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,9 +85,10 @@ export default function QuetzalShop() {
     prenom: "",
     nom: "",
     email: "",
-    whatsapp: "",
+    whatsapp: COUNTRIES[0].code,
     adresse: "",
   });
+  const [whatsappCountry, setWhatsappCountry] = useState(COUNTRIES[0].code);
   const [paymentMethod, setPaymentMethod] = useState(null); // "airtel" | "cash"
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(null);
@@ -232,7 +280,8 @@ export default function QuetzalShop() {
 
       setConfirmed({ orderNo: data.orderNo, total: data.orderTotal });
       setCart([]);
-      setCheckoutForm({ prenom: "", nom: "", email: "", whatsapp: "", adresse: "" });
+      setCheckoutForm({ prenom: "", nom: "", email: "", whatsapp: COUNTRIES[0].code, adresse: "" });
+      setWhatsappCountry(COUNTRIES[0].code);
       setPaymentMethod(null);
       setDrawerStep("cart");
     } catch (err) {
@@ -581,14 +630,43 @@ export default function QuetzalShop() {
                     style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
                   />
 
-                  <input
-                    type="tel"
-                    placeholder="Numéro WhatsApp *"
-                    value={checkoutForm.whatsapp}
-                    onChange={(e) => setCheckoutForm((prev) => ({ ...prev, whatsapp: e.target.value }))}
-                    className="w-full px-3 py-2 font-mono text-xs"
-                    style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
-                  />
+                  <div>
+                    <select
+                      value={whatsappCountry}
+                      onChange={(e) => {
+                        const newCode = e.target.value;
+                        setWhatsappCountry(newCode);
+                        setCheckoutForm((prev) => {
+                          const oldCode = whatsappCountry;
+                          const rest = prev.whatsapp.startsWith(oldCode)
+                            ? prev.whatsapp.slice(oldCode.length)
+                            : prev.whatsapp.replace(/^\+?\d*/, "");
+                          return { ...prev, whatsapp: newCode + rest };
+                        });
+                      }}
+                      className="w-full px-3 py-2 mb-2 font-mono text-xs"
+                      style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+                    >
+                      {COUNTRIES.map((c) => (
+                        <option key={c.name} value={c.code}>
+                          {c.flag} {c.name} ({c.code})
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      placeholder="Numéro WhatsApp *"
+                      value={checkoutForm.whatsapp}
+                      onChange={(e) =>
+                        setCheckoutForm((prev) => ({
+                          ...prev,
+                          whatsapp: sanitizePhoneInput(e.target.value),
+                        }))
+                      }
+                      className="w-full px-3 py-2 font-mono text-xs"
+                      style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+                    />
+                  </div>
 
                   <textarea
                     placeholder="Adresse de livraison *"
