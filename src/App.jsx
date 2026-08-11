@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2, Search } from "lucide-react";
 import quetzalLogo from "./assets/quetzal-logo-officiel.png";
 
 /* ---------------------------------------------------------
@@ -78,6 +78,7 @@ export default function QuetzalShop() {
   const [loadError, setLoadError] = useState(null);
 
   const [sizeChoice, setSizeChoice] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
   const [oosNotice, setOosNotice] = useState(null); // { productId, size }
   const [cart, setCart] = useState([]);
   const [drawerStep, setDrawerStep] = useState("cart"); // "cart" | "checkout"
@@ -143,6 +144,17 @@ export default function QuetzalShop() {
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const subtotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
+
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return products;
+    return products.filter(
+      (p) =>
+        (p.name || "").toLowerCase().includes(q) ||
+        (p.desc || "").toLowerCase().includes(q) ||
+        (p.category || "").toLowerCase().includes(q)
+    );
+  }, [products, searchQuery]);
 
   function pickSize(productId, size) {
     const product = products.find((p) => p.id === productId);
@@ -351,8 +363,8 @@ export default function QuetzalShop() {
             className="text-base md:text-lg max-w-md mx-auto mb-9 font-display"
             style={{ color: C.inkDim, fontWeight: 400 }}
           >
-            Cuirs vernis et grainés, doublures rouge sellier, semelles cousues à la
-            main. De nouveaux modèles rejoignent la collection au fil des saisons.
+            Cuirs vernis et grainés, doublures rouge sellier, triple semelle.
+            De nouveaux modèles rejoignent la collection au fil des saisons.
           </p>
           <a
             href="#boutique"
@@ -367,16 +379,34 @@ export default function QuetzalShop() {
       {/* BOUTIQUE */}
       <section id="boutique" className="px-6 md:px-10 py-16">
         <div className="stitch-rule mb-10" />
-        <div className="flex items-end justify-between mb-10 flex-wrap gap-4">
+        <div className="flex items-end justify-between mb-6 flex-wrap gap-4">
           <h2 className="font-display text-2xl" style={{ fontWeight: 700, color: C.ink }}>
             Chaussures de ville
           </h2>
           {!loading && !loadError && (
             <span className="font-mono text-xs uppercase" style={{ color: C.inkDim, letterSpacing: "0.08em" }}>
-              {products.length} modèles · nouveautés régulières
+              {filteredProducts.length} modèle{filteredProducts.length > 1 ? "s" : ""}
+              {searchQuery ? " trouvé" + (filteredProducts.length > 1 ? "s" : "") : " · nouveautés régulières"}
             </span>
           )}
         </div>
+
+        {!loading && !loadError && (
+          <div className="relative mb-10 max-w-sm">
+            <Search
+              size={15}
+              style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: C.inkDim }}
+            />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Rechercher un modèle…"
+              className="w-full pl-9 pr-3 py-2.5 font-mono text-xs"
+              style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+            />
+          </div>
+        )}
 
         {loading && (
           <div className="flex items-center gap-2 py-10 justify-center" style={{ color: C.inkDim }}>
@@ -393,9 +423,15 @@ export default function QuetzalShop() {
           </div>
         )}
 
-        {!loading && !loadError && (
+        {!loading && !loadError && filteredProducts.length === 0 && (
+          <div className="py-16 text-center font-mono text-xs" style={{ color: C.inkDim }}>
+            Aucun modèle ne correspond à « {searchQuery} ».
+          </div>
+        )}
+
+        {!loading && !loadError && filteredProducts.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
-            {products.map((p) => (
+            {filteredProducts.map((p) => (
               <div key={p.id} className="flex flex-col">
                 <div
                   className="overflow-hidden mb-4"
