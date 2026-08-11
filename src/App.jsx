@@ -529,7 +529,7 @@ export default function QuetzalShop() {
           <img src={quetzalLogo} alt="Quetzal" style={{ height: "32px", width: "auto" }} />
         </div>
         <p className="font-mono text-[11px]" style={{ color: C.inkDim }}>
-          © {new Date().getFullYear()} Quetzal — Fabriqué avec soin.
+          © {new Date().getFullYear()} Quetzal DRC
         </p>
       </footer>
 
