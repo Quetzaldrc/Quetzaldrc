@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { ShoppingBag, X, Plus, Minus, Feather, ChevronRight, Check, Loader2 } from "lucide-react";
+import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2 } from "lucide-react";
+import quetzalLogo from "./assets/quetzal-logo-officiel.png";
 
 /* ---------------------------------------------------------
    QUETZAL — Chaussures de Ville
@@ -261,9 +262,8 @@ export default function QuetzalShop() {
         className="sticky top-0 z-30 flex items-center justify-between px-6 md:px-10 py-4 backdrop-blur"
         style={{ background: "rgba(250,248,244,0.86)", borderBottom: `1px solid ${C.line}` }}
       >
-        <div className="flex items-center gap-2">
-          <Feather size={18} color={C.ink} strokeWidth={1.5} />
-          <span className="font-display text-2xl" style={{ fontWeight: 600, letterSpacing: "0.01em" }}>Quetzal</span>
+        <div className="flex items-center">
+          <img src={quetzalLogo} alt="Quetzal" style={{ height: "44px", width: "auto" }} />
         </div>
         <nav className="hidden md:flex gap-8 font-mono text-xs uppercase" style={{ color: C.inkDim }}>
           <a href="#boutique">Ville</a>
@@ -440,9 +440,8 @@ export default function QuetzalShop() {
 
       {/* FOOTER */}
       <footer className="px-6 md:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-4" style={{ borderTop: `1px solid ${C.line}` }}>
-        <div className="flex items-center gap-2">
-          <Feather size={16} color={C.ink} strokeWidth={1.5} />
-          <span className="font-display text-sm" style={{ fontWeight: 600 }}>Quetzal</span>
+        <div className="flex items-center">
+          <img src={quetzalLogo} alt="Quetzal" style={{ height: "32px", width: "auto" }} />
         </div>
         <p className="font-mono text-[11px]" style={{ color: C.inkDim }}>
           © {new Date().getFullYear()} Quetzal — Fabriqué avec soin.
