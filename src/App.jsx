@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2, Search } from "lucide-react";
 import quetzalLogo from "./assets/quetzal-logo-officiel.png";
+import heroBg from "./assets/quetzal-hero-bg.jpg";
+import heroTail from "./assets/quetzal-hero-tail.png";
 
 /* ---------------------------------------------------------
    QUETZAL — Chaussures de Ville
@@ -316,6 +318,20 @@ export default function QuetzalShop() {
           height: 1px;
           background: ${C.line};
         }
+        @keyframes quetzalTailSway {
+          0%, 100% { transform: rotate(-4deg); }
+          50% { transform: rotate(4deg); }
+        }
+        .quetzal-tail-sway {
+          animation: quetzalTailSway 4.5s ease-in-out infinite;
+        }
+        @keyframes quetzalLetterWave {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-8%); }
+        }
+        .quetzal-letter-wave {
+          animation: quetzalLetterWave 2.2s ease-in-out infinite;
+        }
       `}</style>
 
       {/* NAV */}
@@ -341,15 +357,77 @@ export default function QuetzalShop() {
       </header>
 
       {/* HERO */}
-      <section className="relative w-full">
-        <div className="px-6 md:px-10 pt-20 pb-16 text-center">
-          <p className="font-mono text-xs uppercase mb-6" style={{ color: C.gold, letterSpacing: "0.2em" }}>
+      <section className="relative w-full overflow-hidden" style={{ aspectRatio: "2 / 1" }}>
+        <img
+          src={heroBg}
+          alt=""
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+        />
+
+        {/* queue de l'oiseau, animée indépendamment */}
+        <img
+          src={heroTail}
+          alt=""
+          className="quetzal-tail-sway"
+          style={{
+            position: "absolute",
+            left: "66.5%",
+            top: "36.5%",
+            width: "30.5%",
+            height: "22.5%",
+            transformOrigin: "50% 0%",
+          }}
+        />
+
+        {/* mot "Quetzal" reconstitué en texte, lettres animées */}
+        <div
+          style={{
+            position: "absolute",
+            left: "64.5%",
+            top: "55%",
+            width: "33%",
+            height: "15%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div
+            className="font-display"
+            style={{
+              color: "#FFFFFF",
+              fontWeight: 700,
+              fontSize: "clamp(1.6rem, 6vw, 4.25rem)",
+              letterSpacing: "0.01em",
+            }}
+          >
+            {"Quetzal".split("").map((ch, i) => (
+              <span
+                key={i}
+                className="quetzal-letter-wave"
+                style={{ display: "inline-block", animationDelay: `${i * 0.12}s` }}
+              >
+                {ch}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* texte de présentation, cantonné à la partie blanche */}
+        <div
+          className="absolute inset-y-0 left-0 flex flex-col justify-center px-6 md:px-10"
+          style={{ width: "48%" }}
+        >
+          <p
+            className="font-mono text-xs uppercase mb-4"
+            style={{ color: C.gold, letterSpacing: "0.18em" }}
+          >
             Collection Ville — Cuirs sellier
           </p>
           <h1
-            className="font-display leading-[1.05] mb-6 mx-auto"
+            className="font-display leading-[1.05] mb-4"
             style={{
-              fontSize: "clamp(2.75rem, 7.5vw, 5.25rem)",
+              fontSize: "clamp(1.5rem, 4.2vw, 3.25rem)",
               fontWeight: 700,
               letterSpacing: "-0.01em",
               color: C.ink,
@@ -360,16 +438,28 @@ export default function QuetzalShop() {
             pas en cage.
           </h1>
           <p
-            className="text-base md:text-lg max-w-md mx-auto mb-9 font-display"
-            style={{ color: C.inkDim, fontWeight: 400 }}
+            className="font-display mb-6"
+            style={{
+              color: C.inkDim,
+              fontWeight: 400,
+              fontSize: "clamp(0.7rem, 1.3vw, 1.05rem)",
+              maxWidth: "34ch",
+            }}
           >
             Cuirs vernis et grainés, doublures rouge sellier, triple semelle.
             De nouveaux modèles rejoignent la collection au fil des saisons.
           </p>
           <a
             href="#boutique"
-            className="inline-flex items-center gap-2 px-6 py-3 font-mono text-xs uppercase"
-            style={{ background: C.ink, color: C.bg, letterSpacing: "0.1em", borderRadius: "2px" }}
+            className="inline-flex items-center gap-2 font-mono uppercase self-start"
+            style={{
+              background: C.ink,
+              color: "#FFFFFF",
+              letterSpacing: "0.1em",
+              borderRadius: "2px",
+              padding: "clamp(8px,1.2vw,14px) clamp(14px,2vw,24px)",
+              fontSize: "clamp(0.6rem, 1vw, 0.75rem)",
+            }}
           >
             Voir la collection <ChevronRight size={14} />
           </a>
