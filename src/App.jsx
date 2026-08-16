@@ -26,6 +26,24 @@ const C = {
 
 const SIZES = [39, 40, 41, 42, 43, 44, 45];
 
+const HERO_BUBBLES = [
+  { left: "4%", top: "12%", size: 9, delay: 0 },
+  { left: "14%", top: "28%", size: 6, delay: 1.4 },
+  { left: "22%", top: "8%", size: 11, delay: 0.6 },
+  { left: "31%", top: "22%", size: 7, delay: 2.1 },
+  { left: "40%", top: "16%", size: 8, delay: 0.9 },
+  { left: "48%", top: "32%", size: 6, delay: 1.8 },
+  { left: "8%", top: "48%", size: 7, delay: 2.6 },
+  { left: "19%", top: "58%", size: 10, delay: 0.3 },
+  { left: "34%", top: "50%", size: 6, delay: 1.1 },
+  { left: "45%", top: "60%", size: 12, delay: 2.9 },
+  { left: "6%", top: "76%", size: 8, delay: 1.6 },
+  { left: "17%", top: "84%", size: 6, delay: 0.5 },
+  { left: "28%", top: "78%", size: 9, delay: 2.3 },
+  { left: "39%", top: "88%", size: 7, delay: 1.2 },
+  { left: "51%", top: "78%", size: 10, delay: 0.1 },
+];
+
 const COUNTRIES = [
   { name: "RD Congo", code: "+243", flag: "🇨🇩" },
   { name: "Congo-Brazzaville", code: "+242", flag: "🇨🇬" },
@@ -363,26 +381,20 @@ export default function QuetzalShop() {
         />
 
         {/* petites bulles décoratives animées */}
-        <span
-          className="quetzal-bubble"
-          style={{ position: "absolute", left: "6%", top: "14%", width: "10px", height: "10px", animationDelay: "0s" }}
-        />
-        <span
-          className="quetzal-bubble"
-          style={{ position: "absolute", left: "40%", top: "20%", width: "7px", height: "7px", animationDelay: "1.1s" }}
-        />
-        <span
-          className="quetzal-bubble"
-          style={{ position: "absolute", left: "18%", top: "78%", width: "8px", height: "8px", animationDelay: "2.3s" }}
-        />
-        <span
-          className="quetzal-bubble"
-          style={{ position: "absolute", left: "44%", top: "68%", width: "12px", height: "12px", animationDelay: "0.6s" }}
-        />
-        <span
-          className="quetzal-bubble"
-          style={{ position: "absolute", left: "9%", top: "50%", width: "6px", height: "6px", animationDelay: "1.7s" }}
-        />
+        {HERO_BUBBLES.map((b, i) => (
+          <span
+            key={i}
+            className="quetzal-bubble"
+            style={{
+              position: "absolute",
+              left: b.left,
+              top: b.top,
+              width: `${b.size}px`,
+              height: `${b.size}px`,
+              animationDelay: `${b.delay}s`,
+            }}
+          />
+        ))}
 
         {/* texte de présentation, sur fond noir */}
         <div
@@ -390,15 +402,15 @@ export default function QuetzalShop() {
           style={{ width: "56%" }}
         >
           <p
-            className="font-mono uppercase mb-3"
-            style={{ color: C.gold, letterSpacing: "0.18em", fontSize: "clamp(0.6rem, 1vw, 0.8rem)" }}
+            className="font-mono uppercase mb-4"
+            style={{ color: C.gold, letterSpacing: "0.2em", fontSize: "clamp(0.75rem, 1.3vw, 1rem)" }}
           >
             Collection Ville — Cuirs sellier
           </p>
           <h1
-            className="font-display leading-[1.04] mb-4"
+            className="font-display leading-[1.03] mb-5"
             style={{
-              fontSize: "clamp(2.1rem, 5.8vw, 4.5rem)",
+              fontSize: "clamp(2.6rem, 7vw, 5.5rem)",
               fontWeight: 700,
               letterSpacing: "-0.01em",
               color: "#FFFFFF",
@@ -409,11 +421,11 @@ export default function QuetzalShop() {
             pas en cage.
           </h1>
           <p
-            className="font-display mb-7"
+            className="font-display mb-8"
             style={{
               color: "rgba(255,255,255,0.72)",
               fontWeight: 400,
-              fontSize: "clamp(0.85rem, 1.6vw, 1.2rem)",
+              fontSize: "clamp(1rem, 2vw, 1.45rem)",
               maxWidth: "38ch",
             }}
           >
@@ -428,8 +440,8 @@ export default function QuetzalShop() {
               color: C.ink,
               letterSpacing: "0.1em",
               borderRadius: "2px",
-              padding: "clamp(10px,1.4vw,16px) clamp(18px,2.4vw,28px)",
-              fontSize: "clamp(0.7rem, 1.1vw, 0.85rem)",
+              padding: "clamp(12px,1.6vw,18px) clamp(20px,2.8vw,32px)",
+              fontSize: "clamp(0.8rem, 1.3vw, 1rem)",
             }}
           >
             Voir la collection <ChevronRight size={14} />
