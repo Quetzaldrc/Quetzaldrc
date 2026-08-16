@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2, Search } from "lucide-react";
 import quetzalLogo from "./assets/quetzal-logo-officiel.png";
 import heroBg from "./assets/quetzal-hero-bg.jpg";
+import heroLogoWhite from "./assets/quetzal-logo-blanc.png";
 
 /* ---------------------------------------------------------
    QUETZAL — Chaussures de Ville
@@ -374,21 +375,9 @@ export default function QuetzalShop() {
 
       {/* HERO */}
       <section className="relative w-full overflow-hidden">
-        {/* --- MOBILE : image au-dessus, texte en dessous, pas de superposition --- */}
-        <div className="block md:hidden">
-          <div className="relative w-full" style={{ aspectRatio: "4 / 3" }}>
-            <img
-              src={heroBg}
-              alt="Quetzal"
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "72% center",
-              }}
-            />
+        {/* --- MOBILE : fond noir uni, logo centré, texte en dessous --- */}
+        <div className="block md:hidden" style={{ background: "#000000" }}>
+          <div className="relative w-full flex items-center justify-center pt-12 pb-6 px-10">
             {HERO_BUBBLES.slice(0, 8).map((b, i) => (
               <span
                 key={i}
@@ -403,8 +392,13 @@ export default function QuetzalShop() {
                 }}
               />
             ))}
+            <img
+              src={heroLogoWhite}
+              alt="Quetzal"
+              style={{ width: "62%", maxWidth: "280px", height: "auto", position: "relative" }}
+            />
           </div>
-          <div className="px-6 py-10" style={{ background: "#000000" }}>
+          <div className="px-6 pt-4 pb-10">
             <p
               className="font-mono uppercase mb-3"
               style={{ color: C.gold, letterSpacing: "0.18em", fontSize: "0.75rem" }}
