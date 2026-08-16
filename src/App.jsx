@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2, Search } from "lucide-react";
 import quetzalLogo from "./assets/quetzal-logo-officiel.png";
 import heroBg from "./assets/quetzal-hero-bg.jpg";
-import heroTail from "./assets/quetzal-hero-tail.png";
 
 /* ---------------------------------------------------------
    QUETZAL — Chaussures de Ville
@@ -318,19 +317,18 @@ export default function QuetzalShop() {
           height: 1px;
           background: ${C.line};
         }
-        @keyframes quetzalTailSway {
-          0%, 100% { transform: rotate(-4deg); }
-          50% { transform: rotate(4deg); }
+        @keyframes quetzalBubbleFloat {
+          0% { transform: translateY(0); opacity: 0; }
+          15% { opacity: 0.35; }
+          50% { transform: translateY(-14px); opacity: 0.5; }
+          85% { opacity: 0.2; }
+          100% { transform: translateY(-26px); opacity: 0; }
         }
-        .quetzal-tail-sway {
-          animation: quetzalTailSway 4.5s ease-in-out infinite;
-        }
-        @keyframes quetzalLetterWave {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8%); }
-        }
-        .quetzal-letter-wave {
-          animation: quetzalLetterWave 2.2s ease-in-out infinite;
+        .quetzal-bubble {
+          border-radius: 50%;
+          background: ${C.gold};
+          animation: quetzalBubbleFloat 5s ease-in-out infinite;
+          pointer-events: none;
         }
       `}</style>
 
@@ -360,74 +358,47 @@ export default function QuetzalShop() {
       <section className="relative w-full overflow-hidden" style={{ aspectRatio: "2 / 1" }}>
         <img
           src={heroBg}
-          alt=""
+          alt="Quetzal"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
         />
 
-        {/* queue de l'oiseau, animée indépendamment */}
-        <img
-          src={heroTail}
-          alt=""
-          className="quetzal-tail-sway"
-          style={{
-            position: "absolute",
-            left: "66.5%",
-            top: "36.5%",
-            width: "30.5%",
-            height: "22.5%",
-            transformOrigin: "50% 0%",
-          }}
+        {/* petites bulles décoratives animées */}
+        <span
+          className="quetzal-bubble"
+          style={{ position: "absolute", left: "6%", top: "14%", width: "10px", height: "10px", animationDelay: "0s" }}
         />
-
-        {/* mot "Quetzal" reconstitué en texte, lettres animées */}
-        <div
-          style={{
-            position: "absolute",
-            left: "64.5%",
-            top: "55%",
-            width: "33%",
-            height: "15%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            className="font-display"
-            style={{
-              color: "#FFFFFF",
-              fontWeight: 700,
-              fontSize: "clamp(1.6rem, 6vw, 4.25rem)",
-              letterSpacing: "0.01em",
-            }}
-          >
-            {"Quetzal".split("").map((ch, i) => (
-              <span
-                key={i}
-                className="quetzal-letter-wave"
-                style={{ display: "inline-block", animationDelay: `${i * 0.12}s` }}
-              >
-                {ch}
-              </span>
-            ))}
-          </div>
-        </div>
+        <span
+          className="quetzal-bubble"
+          style={{ position: "absolute", left: "40%", top: "20%", width: "7px", height: "7px", animationDelay: "1.1s" }}
+        />
+        <span
+          className="quetzal-bubble"
+          style={{ position: "absolute", left: "18%", top: "78%", width: "8px", height: "8px", animationDelay: "2.3s" }}
+        />
+        <span
+          className="quetzal-bubble"
+          style={{ position: "absolute", left: "44%", top: "68%", width: "12px", height: "12px", animationDelay: "0.6s" }}
+        />
+        <span
+          className="quetzal-bubble"
+          style={{ position: "absolute", left: "9%", top: "50%", width: "6px", height: "6px", animationDelay: "1.7s" }}
+        />
 
         {/* texte de présentation, cantonné à la partie blanche */}
         <div
-          className="absolute inset-y-0 left-0 flex flex-col justify-center px-6 md:px-10"
-          style={{ width: "48%" }}
+          className="absolute inset-y-0 left-0 flex flex-col justify-center px-6 md:px-12"
+          style={{ width: "50%" }}
         >
           <p
-            className="font-mono text-xs uppercase mb-4"
-            style={{ color: C.gold, letterSpacing: "0.18em" }}
+            className="font-mono uppercase mb-3"
+            style={{ color: C.gold, letterSpacing: "0.18em", fontSize: "clamp(0.6rem, 1vw, 0.8rem)" }}
           >
             Collection Ville — Cuirs sellier
           </p>
           <h1
-            className="font-display leading-[1.05] mb-4"
+            className="font-display leading-[1.04] mb-4"
             style={{
-              fontSize: "clamp(1.5rem, 4.2vw, 3.25rem)",
+              fontSize: "clamp(2rem, 5.6vw, 4.25rem)",
               fontWeight: 700,
               letterSpacing: "-0.01em",
               color: C.ink,
@@ -438,12 +409,12 @@ export default function QuetzalShop() {
             pas en cage.
           </h1>
           <p
-            className="font-display mb-6"
+            className="font-display mb-7"
             style={{
               color: C.inkDim,
               fontWeight: 400,
-              fontSize: "clamp(0.7rem, 1.3vw, 1.05rem)",
-              maxWidth: "34ch",
+              fontSize: "clamp(0.85rem, 1.6vw, 1.2rem)",
+              maxWidth: "36ch",
             }}
           >
             Cuirs vernis et grainés, doublures rouge sellier, triple semelle.
@@ -457,8 +428,8 @@ export default function QuetzalShop() {
               color: "#FFFFFF",
               letterSpacing: "0.1em",
               borderRadius: "2px",
-              padding: "clamp(8px,1.2vw,14px) clamp(14px,2vw,24px)",
-              fontSize: "clamp(0.6rem, 1vw, 0.75rem)",
+              padding: "clamp(10px,1.4vw,16px) clamp(18px,2.4vw,28px)",
+              fontSize: "clamp(0.7rem, 1.1vw, 0.85rem)",
             }}
           >
             Voir la collection <ChevronRight size={14} />
