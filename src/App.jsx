@@ -384,10 +384,10 @@ export default function QuetzalShop() {
           style={{ position: "absolute", left: "9%", top: "50%", width: "6px", height: "6px", animationDelay: "1.7s" }}
         />
 
-        {/* texte de présentation, cantonné à la partie blanche */}
+        {/* texte de présentation, sur fond noir */}
         <div
           className="absolute inset-y-0 left-0 flex flex-col justify-center px-6 md:px-12"
-          style={{ width: "50%" }}
+          style={{ width: "56%" }}
         >
           <p
             className="font-mono uppercase mb-3"
@@ -398,10 +398,10 @@ export default function QuetzalShop() {
           <h1
             className="font-display leading-[1.04] mb-4"
             style={{
-              fontSize: "clamp(2rem, 5.6vw, 4.25rem)",
+              fontSize: "clamp(2.1rem, 5.8vw, 4.5rem)",
               fontWeight: 700,
               letterSpacing: "-0.01em",
-              color: C.ink,
+              color: "#FFFFFF",
             }}
           >
             L'élégance ne se met
@@ -411,10 +411,10 @@ export default function QuetzalShop() {
           <p
             className="font-display mb-7"
             style={{
-              color: C.inkDim,
+              color: "rgba(255,255,255,0.72)",
               fontWeight: 400,
               fontSize: "clamp(0.85rem, 1.6vw, 1.2rem)",
-              maxWidth: "36ch",
+              maxWidth: "38ch",
             }}
           >
             Cuirs vernis et grainés, doublures rouge sellier, triple semelle.
@@ -424,8 +424,8 @@ export default function QuetzalShop() {
             href="#boutique"
             className="inline-flex items-center gap-2 font-mono uppercase self-start"
             style={{
-              background: C.ink,
-              color: "#FFFFFF",
+              background: C.bg,
+              color: C.ink,
               letterSpacing: "0.1em",
               borderRadius: "2px",
               padding: "clamp(10px,1.4vw,16px) clamp(18px,2.4vw,28px)",
