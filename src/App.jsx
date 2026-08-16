@@ -373,79 +373,149 @@ export default function QuetzalShop() {
       </header>
 
       {/* HERO */}
-      <section className="relative w-full overflow-hidden" style={{ aspectRatio: "2 / 1" }}>
-        <img
-          src={heroBg}
-          alt="Quetzal"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-        />
+      <section className="relative w-full overflow-hidden">
+        {/* --- MOBILE : image au-dessus, texte en dessous, pas de superposition --- */}
+        <div className="block md:hidden">
+          <div className="relative w-full" style={{ aspectRatio: "4 / 3" }}>
+            <img
+              src={heroBg}
+              alt="Quetzal"
+              style={{
+                position: "absolute",
+                inset: 0,
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "72% center",
+              }}
+            />
+            {HERO_BUBBLES.slice(0, 8).map((b, i) => (
+              <span
+                key={i}
+                className="quetzal-bubble"
+                style={{
+                  position: "absolute",
+                  left: b.left,
+                  top: b.top,
+                  width: `${b.size}px`,
+                  height: `${b.size}px`,
+                  animationDelay: `${b.delay}s`,
+                }}
+              />
+            ))}
+          </div>
+          <div className="px-6 py-10" style={{ background: "#000000" }}>
+            <p
+              className="font-mono uppercase mb-3"
+              style={{ color: C.gold, letterSpacing: "0.18em", fontSize: "0.75rem" }}
+            >
+              Collection Ville — Cuirs sellier
+            </p>
+            <h1
+              className="font-display leading-[1.08] mb-4"
+              style={{ fontSize: "2.1rem", fontWeight: 700, letterSpacing: "-0.01em", color: "#FFFFFF" }}
+            >
+              L'élégance ne se met
+              <br />
+              pas en cage.
+            </h1>
+            <p
+              className="font-display mb-6"
+              style={{ color: "rgba(255,255,255,0.72)", fontWeight: 400, fontSize: "1.05rem" }}
+            >
+              Cuirs vernis et grainés, doublures rouge sellier, triple semelle.
+              De nouveaux modèles rejoignent la collection au fil des saisons.
+            </p>
+            <a
+              href="#boutique"
+              className="inline-flex items-center gap-2 font-mono uppercase"
+              style={{
+                background: C.bg,
+                color: C.ink,
+                letterSpacing: "0.1em",
+                borderRadius: "2px",
+                padding: "12px 22px",
+                fontSize: "0.8rem",
+              }}
+            >
+              Voir la collection <ChevronRight size={14} />
+            </a>
+          </div>
+        </div>
 
-        {/* petites bulles décoratives animées */}
-        {HERO_BUBBLES.map((b, i) => (
-          <span
-            key={i}
-            className="quetzal-bubble"
-            style={{
-              position: "absolute",
-              left: b.left,
-              top: b.top,
-              width: `${b.size}px`,
-              height: `${b.size}px`,
-              animationDelay: `${b.delay}s`,
-            }}
+        {/* --- DESKTOP : texte superposé sur l'image --- */}
+        <div className="hidden md:block relative w-full" style={{ aspectRatio: "2 / 1" }}>
+          <img
+            src={heroBg}
+            alt="Quetzal"
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
           />
-        ))}
 
-        {/* texte de présentation, sur fond noir */}
-        <div
-          className="absolute inset-y-0 left-0 flex flex-col justify-center px-6 md:px-12"
-          style={{ width: "56%" }}
-        >
-          <p
-            className="font-mono uppercase mb-4"
-            style={{ color: C.gold, letterSpacing: "0.2em", fontSize: "clamp(0.75rem, 1.3vw, 1rem)" }}
+          {HERO_BUBBLES.map((b, i) => (
+            <span
+              key={i}
+              className="quetzal-bubble"
+              style={{
+                position: "absolute",
+                left: b.left,
+                top: b.top,
+                width: `${b.size}px`,
+                height: `${b.size}px`,
+                animationDelay: `${b.delay}s`,
+              }}
+            />
+          ))}
+
+          <div
+            className="absolute inset-y-0 left-0 flex flex-col justify-center px-6 md:px-12"
+            style={{ width: "56%" }}
           >
-            Collection Ville — Cuirs sellier
-          </p>
-          <h1
-            className="font-display leading-[1.03] mb-5"
-            style={{
-              fontSize: "clamp(2.6rem, 7vw, 5.5rem)",
-              fontWeight: 700,
-              letterSpacing: "-0.01em",
-              color: "#FFFFFF",
-            }}
-          >
-            L'élégance ne se met
-            <br />
-            pas en cage.
-          </h1>
-          <p
-            className="font-display mb-8"
-            style={{
-              color: "rgba(255,255,255,0.72)",
-              fontWeight: 400,
-              fontSize: "clamp(1rem, 2vw, 1.45rem)",
-              maxWidth: "38ch",
-            }}
-          >
-            Cuirs vernis et grainés, doublures rouge sellier, triple semelle.
-            De nouveaux modèles rejoignent la collection au fil des saisons.
-          </p>
-          <a
-            href="#boutique"
-            className="inline-flex items-center gap-2 font-mono uppercase self-start"
-            style={{
-              background: C.bg,
-              color: C.ink,
-              letterSpacing: "0.1em",
-              borderRadius: "2px",
-              padding: "clamp(12px,1.6vw,18px) clamp(20px,2.8vw,32px)",
-              fontSize: "clamp(0.8rem, 1.3vw, 1rem)",
-            }}
-          >
-            Voir la collection <ChevronRight size={14} />
-          </a>
+            <p
+              className="font-mono uppercase mb-4"
+              style={{ color: C.gold, letterSpacing: "0.2em", fontSize: "clamp(0.75rem, 1.3vw, 1rem)" }}
+            >
+              Collection Ville — Cuirs sellier
+            </p>
+            <h1
+              className="font-display leading-[1.03] mb-5"
+              style={{
+                fontSize: "clamp(2.6rem, 7vw, 5.5rem)",
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+                color: "#FFFFFF",
+              }}
+            >
+              L'élégance ne se met
+              <br />
+              pas en cage.
+            </h1>
+            <p
+              className="font-display mb-8"
+              style={{
+                color: "rgba(255,255,255,0.72)",
+                fontWeight: 400,
+                fontSize: "clamp(1rem, 2vw, 1.45rem)",
+                maxWidth: "38ch",
+              }}
+            >
+              Cuirs vernis et grainés, doublures rouge sellier, triple semelle.
+              De nouveaux modèles rejoignent la collection au fil des saisons.
+            </p>
+            <a
+              href="#boutique"
+              className="inline-flex items-center gap-2 font-mono uppercase self-start"
+              style={{
+                background: C.bg,
+                color: C.ink,
+                letterSpacing: "0.1em",
+                borderRadius: "2px",
+                padding: "clamp(12px,1.6vw,18px) clamp(20px,2.8vw,32px)",
+                fontSize: "clamp(0.8rem, 1.3vw, 1rem)",
+              }}
+            >
+              Voir la collection <ChevronRight size={14} />
+            </a>
+          </div>
         </div>
       </section>
 
