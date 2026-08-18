@@ -27,6 +27,8 @@ const C = {
 
 const SIZES = [39, 40, 41, 42, 43, 44, 45];
 
+const CITIES = ["Bukavu", "Goma", "Kinshasa"];
+
 const HERO_BUBBLES = [
   { left: "4%", top: "12%", size: 9, delay: 0 },
   { left: "14%", top: "28%", size: 6, delay: 1.4 },
@@ -107,6 +109,7 @@ export default function QuetzalShop() {
     nom: "",
     email: "",
     whatsapp: COUNTRIES[0].code,
+    ville: CITIES[0],
     adresse: "",
   });
   const [whatsappCountry, setWhatsappCountry] = useState(COUNTRIES[0].code);
@@ -175,6 +178,16 @@ export default function QuetzalShop() {
         (p.category || "").toLowerCase().includes(q)
     );
   }, [products, searchQuery]);
+
+  const cityUnavailableItems = useMemo(() => {
+    const ville = checkoutForm.ville;
+    if (!ville) return [];
+    return cart.filter((item) => {
+      const product = products.find((p) => p.id === item.id);
+      if (!product || !product.cities) return false;
+      return product.cities[ville] === false;
+    });
+  }, [cart, products, checkoutForm.ville]);
 
   function pickSize(productId, size) {
     const product = products.find((p) => p.id === productId);
@@ -260,6 +273,7 @@ export default function QuetzalShop() {
       !checkoutForm.prenom.trim() ||
       !checkoutForm.nom.trim() ||
       !checkoutForm.whatsapp.trim() ||
+      !checkoutForm.ville ||
       !checkoutForm.adresse.trim()
     ) {
       setCheckoutError("Merci de remplir tous les champs obligatoires.");
@@ -267,6 +281,13 @@ export default function QuetzalShop() {
     }
     if (!paymentMethod) {
       setCheckoutError("Merci de choisir un mode de paiement.");
+      return;
+    }
+    if (cityUnavailableItems.length > 0) {
+      const names = cityUnavailableItems.map((i) => i.name).join(", ");
+      setCheckoutError(
+        `Non disponible à la livraison à ${checkoutForm.ville} : ${names}. Retire ces articles ou choisis une autre ville.`
+      );
       return;
     }
 
@@ -285,6 +306,7 @@ export default function QuetzalShop() {
             prenom: checkoutForm.prenom.trim(),
             email: checkoutForm.email.trim(),
             whatsapp: checkoutForm.whatsapp.trim(),
+            ville: checkoutForm.ville,
             adresse: checkoutForm.adresse.trim(),
             paiement: paymentMethod === "airtel" ? "Airtel Money" : "Cash à la livraison",
           },
@@ -294,8 +316,16 @@ export default function QuetzalShop() {
 
       if (!data.success) {
         const failed = (data.results || []).filter((r) => !r.success);
-        if (failed.length > 0) {
-          const names = failed
+        const cityFails = failed.filter((f) => f.error === "city_unavailable");
+        const stockFails = failed.filter((f) => f.error === "insufficient_stock");
+
+        if (cityFails.length > 0) {
+          const names = cityFails.map((f) => f.productName || f.id).join(", ");
+          setCheckoutError(
+            `Non disponible à la livraison à ${checkoutForm.ville} : ${names}.`
+          );
+        } else if (stockFails.length > 0) {
+          const names = stockFails
             .map((f) => {
               const p = products.find((pp) => pp.id === f.id);
               return `${p ? p.name : f.id} (taille ${f.size})`;
@@ -312,7 +342,14 @@ export default function QuetzalShop() {
 
       setConfirmed({ orderNo: data.orderNo, total: data.orderTotal });
       setCart([]);
-      setCheckoutForm({ prenom: "", nom: "", email: "", whatsapp: COUNTRIES[0].code, adresse: "" });
+      setCheckoutForm({
+        prenom: "",
+        nom: "",
+        email: "",
+        whatsapp: COUNTRIES[0].code,
+        ville: CITIES[0],
+        adresse: "",
+      });
       setWhatsappCountry(COUNTRIES[0].code);
       setPaymentMethod(null);
       setDrawerStep("cart");
@@ -839,6 +876,27 @@ export default function QuetzalShop() {
                       className="w-full px-3 py-2 font-mono text-xs"
                       style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
                     />
+                  </div>
+
+                  <div>
+                    <select
+                      value={checkoutForm.ville}
+                      onChange={(e) => setCheckoutForm((prev) => ({ ...prev, ville: e.target.value }))}
+                      className="w-full px-3 py-2 font-mono text-xs"
+                      style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.panel, color: C.ink }}
+                    >
+                      {CITIES.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                    {cityUnavailableItems.length > 0 && (
+                      <p className="font-mono text-[11px] mt-2" style={{ color: C.green }}>
+                        Non disponible à la livraison à {checkoutForm.ville} :{" "}
+                        {cityUnavailableItems.map((i) => i.name).join(", ")}.
+                      </p>
+                    )}
                   </div>
 
                   <textarea
