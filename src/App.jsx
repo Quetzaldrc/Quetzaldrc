@@ -398,7 +398,7 @@ export default function QuetzalShop() {
               style={{ width: "62%", maxWidth: "280px", height: "auto", position: "relative" }}
             />
           </div>
-          <div className="px-6 pt-4 pb-10">
+          <div className="px-6 pt-4 pb-10 text-center flex flex-col items-center">
             <p
               className="font-mono uppercase mb-3"
               style={{ color: C.gold, letterSpacing: "0.18em", fontSize: "0.75rem" }}
