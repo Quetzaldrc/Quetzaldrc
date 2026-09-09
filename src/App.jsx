@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2, Search } from "lucide-react";
+import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2, Search, Mail, MessageCircle } from "lucide-react";
 import quetzalLogo from "./assets/quetzal-logo-officiel.png";
 import heroBg from "./assets/quetzal-hero-bg.jpg";
 import heroLogoWhite from "./assets/quetzal-logo-blanc.png";
@@ -28,6 +28,9 @@ const C = {
 const SIZES = [39, 40, 41, 42, 43, 44, 45];
 
 const CITIES = ["Bukavu", "Goma", "Kinshasa"];
+
+const CONTACT_EMAIL = "contact.quetzaldrc@gmail.com";
+const CONTACT_WHATSAPP = "243993350163"; // format international sans le +
 
 const HERO_BUBBLES = [
   { left: "4%", top: "12%", size: 9, delay: 0 },
@@ -111,6 +114,7 @@ export default function QuetzalShop() {
     whatsapp: COUNTRIES[0].code,
     ville: CITIES[0],
     adresse: "",
+    reference: "",
   });
   const [whatsappCountry, setWhatsappCountry] = useState(COUNTRIES[0].code);
   const [paymentMethod, setPaymentMethod] = useState(null); // "airtel" | "cash"
@@ -118,6 +122,8 @@ export default function QuetzalShop() {
   const [confirmed, setConfirmed] = useState(null);
   const [checkingOut, setCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState(null);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
 
   useEffect(() => {
     let cancelled = false;
@@ -266,6 +272,19 @@ export default function QuetzalShop() {
     setCheckoutError(null);
   }
 
+  function sendContactEmail() {
+    const subject = `Message de ${contactForm.name || "un client"} — site Quetzal`;
+    const body = `${contactForm.message}\n\n— ${contactForm.name}${
+      contactForm.email ? " (" + contactForm.email + ")" : ""
+    }`;
+    const mailtoUrl = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+      subject
+    )}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoUrl;
+    setContactModalOpen(false);
+    setContactForm({ name: "", email: "", message: "" });
+  }
+
   async function checkout() {
     if (cart.length === 0 || checkingOut) return;
 
@@ -308,6 +327,7 @@ export default function QuetzalShop() {
             whatsapp: checkoutForm.whatsapp.trim(),
             ville: checkoutForm.ville,
             adresse: checkoutForm.adresse.trim(),
+            reference: checkoutForm.reference.trim(),
             paiement: paymentMethod === "airtel" ? "Airtel Money" : "Cash à la livraison",
           },
         }),
@@ -349,6 +369,7 @@ export default function QuetzalShop() {
         whatsapp: COUNTRIES[0].code,
         ville: CITIES[0],
         adresse: "",
+        reference: "",
       });
       setWhatsappCountry(COUNTRIES[0].code);
       setPaymentMethod(null);
@@ -698,14 +719,119 @@ export default function QuetzalShop() {
       </section>
 
       {/* FOOTER */}
-      <footer className="px-6 md:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-4" style={{ borderTop: `1px solid ${C.line}` }}>
+      <footer
+        className="px-6 md:px-10 py-10 flex flex-col md:flex-row items-center justify-between gap-6"
+        style={{ borderTop: `1px solid ${C.line}` }}
+      >
         <div className="flex items-center">
           <img src={quetzalLogo} alt="Quetzal" style={{ height: "32px", width: "auto" }} />
         </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setContactModalOpen(true)}
+            className="inline-flex items-center gap-2 font-mono text-xs uppercase"
+            style={{
+              border: `1px solid ${C.line}`,
+              color: C.ink,
+              borderRadius: "2px",
+              padding: "8px 14px",
+              letterSpacing: "0.06em",
+            }}
+          >
+            <Mail size={14} /> Nous écrire
+          </button>
+          <a
+            href={`https://wa.me/${CONTACT_WHATSAPP}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 font-mono text-xs uppercase"
+            style={{
+              background: "#25D366",
+              color: "#FFFFFF",
+              borderRadius: "2px",
+              padding: "8px 14px",
+              letterSpacing: "0.06em",
+            }}
+          >
+            <MessageCircle size={14} /> WhatsApp
+          </a>
+        </div>
+
         <p className="font-mono text-[11px]" style={{ color: C.inkDim }}>
           © {new Date().getFullYear()} Quetzal DRC
         </p>
       </footer>
+
+      {/* CONTACT MODAL (formulaire email) */}
+      {contactModalOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center px-6">
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(38,32,26,0.5)" }}
+            onClick={() => setContactModalOpen(false)}
+          />
+          <div
+            className="relative w-full max-w-md p-6"
+            style={{ background: C.panel, borderRadius: "4px", border: `1px solid ${C.line}` }}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-display text-xl" style={{ fontWeight: 700 }}>
+                Nous écrire
+              </h3>
+              <button onClick={() => setContactModalOpen(false)}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <p className="font-mono text-[11px] mb-4" style={{ color: C.inkDim }}>
+              Ce formulaire ouvrira ton application mail, avec le message déjà prêt à
+              destination de {CONTACT_EMAIL}.
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <input
+                type="text"
+                placeholder="Ton nom *"
+                value={contactForm.name}
+                onChange={(e) => setContactForm((prev) => ({ ...prev, name: e.target.value }))}
+                className="w-full px-3 py-2 font-mono text-xs"
+                style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.bg, color: C.ink }}
+              />
+              <input
+                type="email"
+                placeholder="Ton email (pour te répondre)"
+                value={contactForm.email}
+                onChange={(e) => setContactForm((prev) => ({ ...prev, email: e.target.value }))}
+                className="w-full px-3 py-2 font-mono text-xs"
+                style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.bg, color: C.ink }}
+              />
+              <textarea
+                placeholder="Ton message *"
+                value={contactForm.message}
+                onChange={(e) => setContactForm((prev) => ({ ...prev, message: e.target.value }))}
+                rows={4}
+                className="w-full px-3 py-2 font-mono text-xs resize-none"
+                style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.bg, color: C.ink }}
+              />
+              <button
+                onClick={sendContactEmail}
+                disabled={!contactForm.name.trim() || !contactForm.message.trim()}
+                className="w-full py-3 font-mono text-xs uppercase mt-1"
+                style={{
+                  background: C.ink,
+                  color: C.bg,
+                  letterSpacing: "0.08em",
+                  borderRadius: "2px",
+                  opacity: !contactForm.name.trim() || !contactForm.message.trim() ? 0.5 : 1,
+                }}
+              >
+                Ouvrir mon mail pour envoyer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* CART DRAWER */}
       {drawerOpen && (
