@@ -27,7 +27,7 @@ const C = {
 
 const SIZES = [39, 40, 41, 42, 43, 44, 45];
 
-const CITIES = ["Bukavu", "Goma", "Kinshasa"];
+const CITIES = ["Bukavu", "Goma", "Kinshasa", "Uvira", "Bujumbura", "Beni", "Kigali"];
 
 const CONTACT_EMAIL = "contact.quetzaldrc@gmail.com";
 const CONTACT_WHATSAPP = "243993350163"; // format international sans le +
@@ -174,11 +174,6 @@ export default function QuetzalShop() {
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const subtotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
   const DELIVERY_FEE = 5;
-  const deliveryFee =
-    cart.length > 0 && checkoutForm.ville && checkoutForm.ville !== "Bukavu"
-      ? DELIVERY_FEE
-      : 0;
-  const orderTotal = subtotal + deliveryFee;
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -200,6 +195,18 @@ export default function QuetzalShop() {
       return product.cities[ville] === false;
     });
   }, [cart, products, checkoutForm.ville]);
+
+  // Tant qu'un article du panier n'est pas livrable dans la ville choisie,
+  // on ne calcule pas de frais de livraison (la commande ne peut pas passer).
+  const hasCityBlock = cart.length > 0 && cityUnavailableItems.length > 0;
+  const deliveryFee =
+    cart.length > 0 &&
+    checkoutForm.ville &&
+    checkoutForm.ville !== "Bukavu" &&
+    !hasCityBlock
+      ? DELIVERY_FEE
+      : 0;
+  const orderTotal = subtotal + deliveryFee;
 
   function pickSize(productId, size) {
     const product = products.find((p) => p.id === productId);
@@ -1093,29 +1100,39 @@ export default function QuetzalShop() {
                       Frais de livraison{checkoutForm.ville ? ` (${checkoutForm.ville})` : ""}
                     </span>
                     <span style={{ color: C.ink }}>
-                      {deliveryFee > 0 ? `$${deliveryFee}` : "Gratuit"}
+                      {hasCityBlock ? "—" : deliveryFee > 0 ? `$${deliveryFee}` : "Gratuit"}
                     </span>
                   </div>
                   <div className="flex justify-between mb-4 pt-2 font-mono text-sm" style={{ borderTop: `1px solid ${C.line}` }}>
                     <span style={{ color: C.inkDim }}>Total</span>
                     <span style={{ color: C.green, fontWeight: 700 }}>${orderTotal}</span>
                   </div>
-                  {checkoutError && (
+                  {hasCityBlock ? (
                     <p className="font-mono text-[11px] mb-3" style={{ color: C.green }}>
-                      {checkoutError}
+                      Commande impossible : {cityUnavailableItems.map((i) => i.name).join(", ")}{" "}
+                      {cityUnavailableItems.length > 1 ? "ne sont pas livrables" : "n'est pas livrable"} à{" "}
+                      {checkoutForm.ville}. Retire {cityUnavailableItems.length > 1 ? "ces articles" : "cet article"} du
+                      panier ou choisis une autre ville.
                     </p>
+                  ) : (
+                    checkoutError && (
+                      <p className="font-mono text-[11px] mb-3" style={{ color: C.green }}>
+                        {checkoutError}
+                      </p>
+                    )
                   )}
                   <button
                     onClick={checkout}
-                    disabled={checkingOut}
+                    disabled={checkingOut || hasCityBlock}
                     className="w-full py-3 font-mono text-xs uppercase flex items-center justify-center gap-2"
                     style={{
-                      background: C.green,
-                      color: C.bg,
+                      background: hasCityBlock ? C.panelSoft : C.green,
+                      color: hasCityBlock ? C.inkDim : C.bg,
                       letterSpacing: "0.08em",
                       borderRadius: "2px",
                       opacity: checkingOut ? 0.7 : 1,
-                      cursor: checkingOut ? "wait" : "pointer",
+                      cursor: hasCityBlock ? "not-allowed" : checkingOut ? "wait" : "pointer",
+                      border: hasCityBlock ? `1px solid ${C.line}` : "none",
                     }}
                   >
                     {checkingOut ? (
