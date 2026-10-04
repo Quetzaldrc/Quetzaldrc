@@ -173,6 +173,12 @@ export default function QuetzalShop() {
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const subtotal = cart.reduce((s, i) => s + i.qty * i.price, 0);
+  const DELIVERY_FEE = 5;
+  const deliveryFee =
+    cart.length > 0 && checkoutForm.ville && checkoutForm.ville !== "Bukavu"
+      ? DELIVERY_FEE
+      : 0;
+  const orderTotal = subtotal + deliveryFee;
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -1078,9 +1084,21 @@ export default function QuetzalShop() {
                 </div>
 
                 <div className="pt-4">
-                  <div className="flex justify-between mb-4 font-mono text-sm">
+                  <div className="flex justify-between mb-1 font-mono text-sm">
                     <span style={{ color: C.inkDim }}>Sous-total</span>
-                    <span style={{ color: C.green }}>${subtotal}</span>
+                    <span style={{ color: C.ink }}>${subtotal}</span>
+                  </div>
+                  <div className="flex justify-between mb-1 font-mono text-sm">
+                    <span style={{ color: C.inkDim }}>
+                      Frais de livraison{checkoutForm.ville ? ` (${checkoutForm.ville})` : ""}
+                    </span>
+                    <span style={{ color: C.ink }}>
+                      {deliveryFee > 0 ? `$${deliveryFee}` : "Gratuit"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between mb-4 pt-2 font-mono text-sm" style={{ borderTop: `1px solid ${C.line}` }}>
+                    <span style={{ color: C.inkDim }}>Total</span>
+                    <span style={{ color: C.green, fontWeight: 700 }}>${orderTotal}</span>
                   </div>
                   {checkoutError && (
                     <p className="font-mono text-[11px] mb-3" style={{ color: C.green }}>
