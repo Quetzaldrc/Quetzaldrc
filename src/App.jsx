@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2, Search, Mail, MessageCircle } from "lucide-react";
+import { ShoppingBag, X, Plus, Minus, ChevronRight, Check, Loader2, Search, Mail, MessageCircle, Star } from "lucide-react";
 import quetzalLogo from "./assets/quetzal-logo-officiel.png";
 import heroBg from "./assets/quetzal-hero-bg.jpg";
 import heroLogoWhite from "./assets/quetzal-logo-blanc.png";
@@ -124,6 +124,21 @@ export default function QuetzalShop() {
   const [checkoutError, setCheckoutError] = useState(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
+
+  // Avis clients
+  const [reviewsModalProduct, setReviewsModalProduct] = useState(null); // produit dont on affiche les avis
+  const [reviewsModalData, setReviewsModalData] = useState({ loading: false, error: null, reviews: [], avgRating: 0, reviewCount: 0 });
+
+  const [reviewFormOpen, setReviewFormOpen] = useState(false); // modal "Laisser un avis"
+  const [reviewStep, setReviewStep] = useState("lookup"); // "lookup" | "items"
+  const [reviewLookup, setReviewLookup] = useState({ orderNo: "", whatsapp: "" });
+  const [reviewLookupLoading, setReviewLookupLoading] = useState(false);
+  const [reviewLookupError, setReviewLookupError] = useState(null);
+  const [reviewOrderItems, setReviewOrderItems] = useState([]);
+  const [reviewDrafts, setReviewDrafts] = useState({}); // { [productId]: { note, commentaire } }
+  const [reviewSubmitting, setReviewSubmitting] = useState(null); // productId en cours d'envoi
+  const [reviewSubmittedIds, setReviewSubmittedIds] = useState([]);
+  const [reviewSubmitError, setReviewSubmitError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -296,6 +311,120 @@ export default function QuetzalShop() {
     window.location.href = mailtoUrl;
     setContactModalOpen(false);
     setContactForm({ name: "", email: "", message: "" });
+  }
+
+  async function openProductReviews(product) {
+    setReviewsModalProduct(product);
+    setReviewsModalData({ loading: true, error: null, reviews: [], avgRating: 0, reviewCount: 0 });
+    try {
+      const res = await fetch(`${STOCK_API_URL}?action=productReviews&productId=${encodeURIComponent(product.id)}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Impossible de charger les avis.");
+      setReviewsModalData({
+        loading: false,
+        error: null,
+        reviews: data.reviews || [],
+        avgRating: data.avgRating || 0,
+        reviewCount: data.reviewCount || 0,
+      });
+    } catch (err) {
+      setReviewsModalData({ loading: false, error: "Impossible de charger les avis pour le moment.", reviews: [], avgRating: 0, reviewCount: 0 });
+    }
+  }
+
+  function closeProductReviews() {
+    setReviewsModalProduct(null);
+  }
+
+  function openReviewForm() {
+    setReviewFormOpen(true);
+    setReviewStep("lookup");
+    setReviewLookupError(null);
+    setReviewSubmitError(null);
+    setReviewOrderItems([]);
+    setReviewDrafts({});
+    setReviewSubmittedIds([]);
+  }
+
+  function closeReviewForm() {
+    setReviewFormOpen(false);
+  }
+
+  async function lookupOrderForReview() {
+    if (!reviewLookup.orderNo.trim() || !reviewLookup.whatsapp.trim()) {
+      setReviewLookupError("Merci de renseigner le numéro de commande et le numéro WhatsApp.");
+      return;
+    }
+    setReviewLookupLoading(true);
+    setReviewLookupError(null);
+    try {
+      const params = new URLSearchParams({
+        action: "orderLookup",
+        orderNo: reviewLookup.orderNo.trim(),
+        whatsapp: reviewLookup.whatsapp.trim(),
+      });
+      const res = await fetch(`${STOCK_API_URL}?${params.toString()}`);
+      const data = await res.json();
+      if (!data.success) {
+        setReviewLookupError(
+          data.error === "order_not_found"
+            ? "Aucune commande trouvée avec ce numéro et ce numéro WhatsApp. Vérifie les deux informations."
+            : "Impossible de retrouver cette commande pour le moment."
+        );
+        return;
+      }
+      setReviewOrderItems(data.items || []);
+      setReviewStep("items");
+    } catch (err) {
+      setReviewLookupError("Impossible de contacter le serveur. Réessaie.");
+    } finally {
+      setReviewLookupLoading(false);
+    }
+  }
+
+  function setReviewDraft(productId, patch) {
+    setReviewDrafts((prev) => ({
+      ...prev,
+      [productId]: { note: 0, commentaire: "", ...prev[productId], ...patch },
+    }));
+  }
+
+  async function submitProductReview(item) {
+    const draft = reviewDrafts[item.productId] || { note: 0, commentaire: "" };
+    if (!draft.note || draft.note < 1) {
+      setReviewSubmitError("Choisis une note (de 1 à 5 étoiles) avant d'envoyer.");
+      return;
+    }
+    setReviewSubmitting(item.productId);
+    setReviewSubmitError(null);
+    try {
+      const res = await fetch(STOCK_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({
+          action: "review",
+          orderNo: reviewLookup.orderNo.trim(),
+          whatsapp: reviewLookup.whatsapp.trim(),
+          productId: item.productId,
+          note: draft.note,
+          commentaire: draft.commentaire || "",
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setReviewSubmitError(
+          data.error === "already_reviewed"
+            ? "Cet article a déjà été noté."
+            : "Impossible d'enregistrer cet avis pour le moment."
+        );
+        return;
+      }
+      setReviewSubmittedIds((prev) => [...prev, item.productId]);
+    } catch (err) {
+      setReviewSubmitError("Impossible de contacter le serveur. Réessaie.");
+    } finally {
+      setReviewSubmitting(null);
+    }
   }
 
   async function checkout() {
@@ -661,6 +790,26 @@ export default function QuetzalShop() {
                   </span>
                 </div>
 
+                <button
+                  onClick={() => openProductReviews(p)}
+                  className="flex items-center gap-1.5 mt-2 self-start"
+                  style={{ color: C.inkDim }}
+                >
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      size={13}
+                      fill={n <= Math.round(p.avgRating || 0) ? C.gold : "none"}
+                      stroke={n <= Math.round(p.avgRating || 0) ? C.gold : C.inkDim}
+                    />
+                  ))}
+                  <span className="font-mono text-[11px]">
+                    {p.reviewCount > 0
+                      ? `${p.avgRating} (${p.reviewCount} avis)`
+                      : "Aucun avis pour l'instant"}
+                  </span>
+                </button>
+
                 <p className="text-sm mt-3 mb-5 font-display" style={{ color: C.inkDim, fontWeight: 400 }}>{p.desc}</p>
 
                 <div className="mt-auto">
@@ -754,6 +903,19 @@ export default function QuetzalShop() {
           >
             <Mail size={14} /> Nous écrire
           </button>
+          <button
+            onClick={openReviewForm}
+            className="inline-flex items-center gap-2 font-mono text-xs uppercase"
+            style={{
+              border: `1px solid ${C.line}`,
+              color: C.ink,
+              borderRadius: "2px",
+              padding: "8px 14px",
+              letterSpacing: "0.06em",
+            }}
+          >
+            <Star size={14} /> Laisser un avis
+          </button>
           <a
             href={`https://wa.me/${CONTACT_WHATSAPP}`}
             target="_blank"
@@ -842,6 +1004,218 @@ export default function QuetzalShop() {
                 Ouvrir mon mail pour envoyer
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AVIS D'UN PRODUIT (lecture seule) */}
+      {reviewsModalProduct && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center px-6">
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(38,32,26,0.5)" }}
+            onClick={closeProductReviews}
+          />
+          <div
+            className="relative w-full max-w-md p-6 max-h-[80vh] overflow-y-auto"
+            style={{ background: C.panel, borderRadius: "4px", border: `1px solid ${C.line}` }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-display text-xl" style={{ fontWeight: 700 }}>
+                Avis — {reviewsModalProduct.name}
+              </h3>
+              <button onClick={closeProductReviews}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {reviewsModalData.loading ? (
+              <div className="py-10 flex items-center justify-center">
+                <Loader2 size={20} className="animate-spin" style={{ color: C.inkDim }} />
+              </div>
+            ) : reviewsModalData.error ? (
+              <p className="font-mono text-xs" style={{ color: C.green }}>{reviewsModalData.error}</p>
+            ) : reviewsModalData.reviewCount === 0 ? (
+              <p className="font-mono text-xs mt-4" style={{ color: C.inkDim }}>
+                Aucun avis pour ce modèle pour l'instant. Si tu l'as déjà commandé, sois le premier à le noter via
+                « Laisser un avis » dans le pied de page.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-5">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star
+                      key={n}
+                      size={16}
+                      fill={n <= Math.round(reviewsModalData.avgRating) ? C.gold : "none"}
+                      stroke={n <= Math.round(reviewsModalData.avgRating) ? C.gold : C.inkDim}
+                    />
+                  ))}
+                  <span className="font-mono text-xs" style={{ color: C.inkDim }}>
+                    {reviewsModalData.avgRating} / 5 · {reviewsModalData.reviewCount} avis
+                  </span>
+                </div>
+                <div className="flex flex-col gap-4">
+                  {reviewsModalData.reviews.map((r, i) => (
+                    <div key={i} className="pb-4" style={{ borderBottom: `1px solid ${C.line}` }}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-display text-sm" style={{ fontWeight: 700 }}>{r.prenom}</span>
+                        <div className="flex items-center gap-0.5">
+                          {[1, 2, 3, 4, 5].map((n) => (
+                            <Star key={n} size={12} fill={n <= r.note ? C.gold : "none"} stroke={n <= r.note ? C.gold : C.inkDim} />
+                          ))}
+                        </div>
+                      </div>
+                      {r.commentaire && (
+                        <p className="text-sm font-display" style={{ color: C.inkDim, fontWeight: 400 }}>{r.commentaire}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* LAISSER UN AVIS (vérification commande + WhatsApp) */}
+      {reviewFormOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center px-6">
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(38,32,26,0.5)" }}
+            onClick={closeReviewForm}
+          />
+          <div
+            className="relative w-full max-w-md p-6 max-h-[85vh] overflow-y-auto"
+            style={{ background: C.panel, borderRadius: "4px", border: `1px solid ${C.line}` }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-display text-xl" style={{ fontWeight: 700 }}>
+                Laisser un avis
+              </h3>
+              <button onClick={closeReviewForm}>
+                <X size={20} />
+              </button>
+            </div>
+
+            {reviewStep === "lookup" ? (
+              <>
+                <p className="font-mono text-[11px] mb-4" style={{ color: C.inkDim }}>
+                  Pour vérifier que tu as bien commandé, indique le numéro de ta commande (reçu après ton achat)
+                  et le numéro WhatsApp utilisé à ce moment-là.
+                </p>
+                <div className="flex flex-col gap-3">
+                  <input
+                    type="text"
+                    placeholder="Numéro de commande (ex : QTZ-...) *"
+                    value={reviewLookup.orderNo}
+                    onChange={(e) => setReviewLookup((prev) => ({ ...prev, orderNo: e.target.value }))}
+                    className="w-full px-3 py-2 font-mono text-xs"
+                    style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.bg, color: C.ink }}
+                  />
+                  <input
+                    type="tel"
+                    placeholder="Numéro WhatsApp utilisé pour la commande *"
+                    value={reviewLookup.whatsapp}
+                    onChange={(e) => setReviewLookup((prev) => ({ ...prev, whatsapp: sanitizePhoneInput(e.target.value) }))}
+                    className="w-full px-3 py-2 font-mono text-xs"
+                    style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.bg, color: C.ink }}
+                  />
+                  {reviewLookupError && (
+                    <p className="font-mono text-[11px]" style={{ color: C.green }}>{reviewLookupError}</p>
+                  )}
+                  <button
+                    onClick={lookupOrderForReview}
+                    disabled={reviewLookupLoading}
+                    className="w-full py-3 font-mono text-xs uppercase mt-1 flex items-center justify-center gap-2"
+                    style={{
+                      background: C.ink,
+                      color: C.bg,
+                      letterSpacing: "0.08em",
+                      borderRadius: "2px",
+                      opacity: reviewLookupLoading ? 0.7 : 1,
+                    }}
+                  >
+                    {reviewLookupLoading ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" /> Vérification…
+                      </>
+                    ) : (
+                      "Retrouver ma commande"
+                    )}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="font-mono text-[11px] mb-4" style={{ color: C.inkDim }}>
+                  Commande {reviewLookup.orderNo} — note les articles que tu as reçus.
+                </p>
+                <div className="flex flex-col gap-5">
+                  {reviewOrderItems.length === 0 && (
+                    <p className="font-mono text-xs" style={{ color: C.inkDim }}>Aucun article trouvé pour cette commande.</p>
+                  )}
+                  {reviewOrderItems.map((item) => {
+                    const done = item.dejaNote || reviewSubmittedIds.includes(item.productId);
+                    const draft = reviewDrafts[item.productId] || { note: 0, commentaire: "" };
+                    return (
+                      <div key={item.productId} className="pb-5" style={{ borderBottom: `1px solid ${C.line}` }}>
+                        <p className="font-display text-sm mb-2" style={{ fontWeight: 700 }}>
+                          {item.productName} {item.pointure ? `· Taille ${item.pointure}` : ""}
+                        </p>
+                        {done ? (
+                          <p className="font-mono text-[11px] flex items-center gap-1" style={{ color: C.green }}>
+                            <Check size={13} /> Merci, ton avis a bien été enregistré.
+                          </p>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-1 mb-2">
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <button key={n} onClick={() => setReviewDraft(item.productId, { note: n })}>
+                                  <Star size={18} fill={n <= draft.note ? C.gold : "none"} stroke={n <= draft.note ? C.gold : C.inkDim} />
+                                </button>
+                              ))}
+                            </div>
+                            <textarea
+                              placeholder="Ton commentaire (facultatif)"
+                              value={draft.commentaire}
+                              onChange={(e) => setReviewDraft(item.productId, { commentaire: e.target.value })}
+                              rows={2}
+                              className="w-full px-3 py-2 font-mono text-xs resize-none mb-2"
+                              style={{ border: `1px solid ${C.line}`, borderRadius: "2px", background: C.bg, color: C.ink }}
+                            />
+                            <button
+                              onClick={() => submitProductReview(item)}
+                              disabled={reviewSubmitting === item.productId}
+                              className="w-full py-2.5 font-mono text-xs uppercase flex items-center justify-center gap-2"
+                              style={{
+                                background: C.ink,
+                                color: C.bg,
+                                letterSpacing: "0.08em",
+                                borderRadius: "2px",
+                                opacity: reviewSubmitting === item.productId ? 0.7 : 1,
+                              }}
+                            >
+                              {reviewSubmitting === item.productId ? (
+                                <>
+                                  <Loader2 size={13} className="animate-spin" /> Envoi…
+                                </>
+                              ) : (
+                                "Envoyer mon avis"
+                              )}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {reviewSubmitError && (
+                    <p className="font-mono text-[11px]" style={{ color: C.green }}>{reviewSubmitError}</p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
